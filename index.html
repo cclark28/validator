@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClickTag Validator — DemandScience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+  :root {
+    --navy:          #061947;
+    --electric-blue: #0266F7;
+    --purple:        #5614c1;
+    --cta-red:       #d42f5b;
+    --white:         #FFFFFF;
+    --light-surface: #F3F6F9;
+    --mid-surface:   #E8EEF5;
+    --card-bg:       #F0F4F8;
+    --baby-blue:     #cdedfd;
+    --text-dark:     #1E293B;
+    --grad-start:    #0F399C;
+    --grad-2:        #121970;
+    --grad-3:        #181776;
+    --grad-end:      #3C13A5;
+
+    --status-pass:   #0f7b55;
+    --status-pass-bg:#e6f4ef;
+    --status-warn:   #b45309;
+    --status-warn-bg:#fef3c7;
+    --status-fail:   #b91c1c;
+    --status-fail-bg:#fee2e2;
+    --status-fix:    #0266F7;
+    --status-fix-bg: #dbeafe;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-pill: 100px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: var(--light-surface);
+    color: var(--text-dark);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--grad-start) 0%, var(--grad-2) 20%, var(--grad-3) 75%, var(--grad-end) 100%);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(6,25,71,0.3);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo img {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+  .header-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.3);
+  }
+  .header-tool-name {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.01em;
+  }
+  .header-badge {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    margin-bottom: 36px;
+  }
+  .page-header h1 {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    font-size: 15px;
+    color: #64748b;
+    max-width: 620px;
+  }
+  .page-header .ttd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--electric-blue);
+    background: var(--baby-blue);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* ── Drop zone ── */
+  .drop-zone {
+    border: 2px dashed var(--mid-surface);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    padding: 56px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    position: relative;
+    margin-bottom: 32px;
+  }
+  .drop-zone:hover,
+  .drop-zone.drag-over {
+    border-color: var(--electric-blue);
+    background: #f0f7ff;
+    box-shadow: 0 0 0 4px rgba(2,102,247,0.08);
+  }
+  .drop-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    background: var(--baby-blue);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .drop-icon svg { color: var(--electric-blue); }
+  .drop-zone h2 {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .drop-zone p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 20px;
+  }
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: var(--radius-pill);
+    border: none;
+    cursor: pointer;
+    padding: 10px 22px;
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--cta-red);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(212,47,91,0.3);
+  }
+  .btn-primary:hover { opacity: 0.9; box-shadow: 0 4px 14px rgba(212,47,91,0.35); }
+  .btn-secondary {
+    background: var(--navy);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(6,25,71,0.2);
+  }
+  .btn-secondary:hover { opacity: 0.88; }
+  .btn-ghost {
+    background: var(--mid-surface);
+    color: var(--text-dark);
+  }
+  .btn-ghost:hover { background: #d1dae7; }
+  .btn-sm { padding: 7px 16px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── Queue bar ── */
+  .queue-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border: 1px solid var(--mid-surface);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    gap: 12px;
+  }
+  .queue-meta {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .queue-meta strong {
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .queue-actions { display: flex; gap: 8px; }
+
+  /* ── Results grid ── */
+  #results { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Creative card ── */
+  .creative-card {
+    background: var(--white);
+    border: 1px solid var(--mid-surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(6,25,71,0.06);
+    transition: box-shadow 0.2s;
+  }
+  .creative-card:hover { box-shadow: 0 4px 16px rgba(6,25,71,0.1); }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mid-surface);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .file-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--navy);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-filename {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+  }
+  .card-filesize {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 1px;
+  }
+  .card-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .status-pass   { background: var(--status-pass-bg);   color: var(--status-pass); }
+  .status-warn   { background: var(--status-warn-bg);   color: var(--status-warn); }
+  .status-fail   { background: var(--status-fail-bg);   color: var(--status-fail); }
+  .status-fixed  { background: var(--status-fix-bg);    color: var(--status-fix);  }
+  .status-processing { background: #f1f5f9; color: #64748b; }
+
+  /* ── Check table ── */
+  .check-list {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .check-row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .check-icon { margin-top: 2px; flex-shrink: 0; }
+  .check-label { color: var(--text-dark); }
+  .check-label code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: var(--card-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--electric-blue);
+  }
+  .check-fix-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--status-fix-bg);
+    color: var(--status-fix);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .check-ok-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--status-pass-bg);
+    color: var(--status-pass);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  /* ── Code preview ── */
+  .code-preview {
+    margin: 0 20px 18px;
+    background: #0d1117;
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    overflow-x: auto;
+  }
+  .code-preview pre {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #c9d1d9;
+    white-space: pre;
+  }
+  .code-preview .hl-inject { color: #7ee787; }
+  .code-preview .hl-key    { color: #79c0ff; }
+  .code-preview .hl-str    { color: #a5d6ff; }
+  .code-preview .hl-comment{ color: #8b949e; font-style: italic; }
+
+  .card-footer {
+    padding: 14px 20px;
+    background: var(--light-surface);
+    border-top: 1px solid var(--mid-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .card-footer-meta {
+    font-size: 12px;
+    color: #64748b;
+  }
+  .card-footer-meta strong { color: var(--navy); }
+  .card-footer-actions { display: flex; gap: 8px; }
+
+  /* ── Summary bar ── */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .summary-stat {
+    background: var(--white);
+    border: 1px solid var(--mid-surface);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+  }
+  .summary-stat .stat-value {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .summary-stat .stat-label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  .summary-stat.stat-pass .stat-value  { color: var(--status-pass); }
+  .summary-stat.stat-warn .stat-value  { color: var(--status-warn); }
+  .summary-stat.stat-fail .stat-value  { color: var(--status-fail); }
+
+  /* ── Action row ── */
+  .action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .action-row h2 {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  /* ── Naming convention tag ── */
+  .naming-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--purple);
+    background: #f0ebfa;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    margin-left: 8px;
+  }
+
+  /* ── Progress overlay ── */
+  .progress-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,25,71,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .progress-overlay.active { display: flex; }
+  .progress-modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 36px 40px;
+    text-align: center;
+    min-width: 340px;
+    box-shadow: 0 20px 60px rgba(6,25,71,0.25);
+  }
+  .progress-modal h3 {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .progress-modal p { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+  .progress-bar-track {
+    height: 6px;
+    background: var(--mid-surface);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--electric-blue), var(--purple));
+    border-radius: var(--radius-pill);
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    display: none;
+  }
+  .empty-state svg { margin: 0 auto 16px; display: block; opacity: 0.35; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── Tooltip ── */
+  [data-tip] { position: relative; cursor: help; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: var(--white);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--mid-surface); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    main { padding: 24px 16px 60px; }
+    header { padding: 16px 20px; }
+    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .card-filename { max-width: 200px; }
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .creative-card { animation: fadeInUp 0.25s ease both; }
+
+  /* ── Divider ── */
+  .section-divider {
+    height: 1px;
+    background: var(--mid-surface);
+    margin: 32px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-logo">
+    <img src="data:image/png;base64,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" alt="DemandScience">
+    <div class="header-divider"></div>
+    <span class="header-tool-name">ClickTag Validator</span>
+  </div>
+  <span class="header-badge">The Trade Desk</span>
+</header>
+
+<!-- Progress overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-modal">
+    <h3 id="progressTitle">Processing Creatives</h3>
+    <p id="progressSub">Extracting and validating ZIP files...</p>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">0 / 0</div>
+  </div>
+</div>
+
+<main>
+  <!-- Page heading -->
+  <div class="page-header">
+    <h1>ClickTag Validator &amp; Fixer</h1>
+    <p>Upload HTML5 display creative ZIPs. The tool validates clickTag compliance against The Trade Desk spec, auto-corrects issues, and outputs delivery-ready ZIPs with clean naming.</p>
+    <span class="ttd-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+      TTD-Compatible Output
+    </span>
+    <span class="naming-tag">kebab-case · no spaces · lowercase</span>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" multiple accept=".zip">
+    <div class="drop-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h2>Drop creative ZIPs here</h2>
+    <p>Drag &amp; drop one or more .zip files, or click to browse</p>
+    <button class="btn btn-primary" type="button" onclick="document.getElementById('fileInput').click(); event.stopPropagation();">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Select Files
+    </button>
+  </div>
+
+  <!-- Queue bar (hidden until files loaded) -->
+  <div class="queue-bar" id="queueBar" style="display:none;">
+    <div class="queue-meta"><strong id="queueCount">0</strong> creative(s) queued for validation</div>
+    <div class="queue-actions">
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear All</button>
+      <button class="btn btn-secondary btn-sm" onclick="validateAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Validate All
+      </button>
+      <button class="btn btn-primary btn-sm" id="fixAllBtn" onclick="fixAndRepackageAll()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Fix &amp; Repackage All
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary stats (hidden until validated) -->
+  <div class="summary-bar" id="summaryBar" style="display:none;">
+    <div class="summary-stat">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">Total Creatives</div>
+    </div>
+    <div class="summary-stat stat-pass">
+      <div class="stat-value" id="statPass">0</div>
+      <div class="stat-label">Valid</div>
+    </div>
+    <div class="summary-stat stat-warn">
+      <div class="stat-value" id="statWarn">0</div>
+      <div class="stat-label">Fixed</div>
+    </div>
+    <div class="summary-stat stat-fail">
+      <div class="stat-value" id="statFail">0</div>
+      <div class="stat-label">Issues Found</div>
+    </div>
+  </div>
+
+  <!-- Action row (shown after validation) -->
+  <div class="action-row" id="actionRow" style="display:none;">
+    <h2>Validation Results</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()">Reset</button>
+      <button class="btn btn-primary" onclick="downloadAll()" id="downloadAllBtn" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download All Corrected ZIPs
+      </button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+  <div class="empty-state" id="emptyState">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    <p>No results yet. Upload ZIP files above to begin.</p>
+  </div>
+</main>
+
+<script>
+/* ── State ── */
+const creatives = [];     // { name, originalName, file, zip, files, checks, status, fixedZip }
+let validated = false;
+
+/* ── Drag & Drop ── */
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', e => handleFiles([...e.target.files]));
+
+async function handleFiles(files) {
+  const zips = files.filter(f => f.name.toLowerCase().endsWith('.zip'));
+  if (!zips.length) return alert('Please upload .zip files only.');
+  for (const f of zips) {
+    try {
+      const zip = await JSZip.loadAsync(f);
+      creatives.push({ originalName: f.name, name: sanitizeName(f.name), file: f, zip, files: zip.files, checks: null, status: 'queued', fixedZip: null });
+    } catch (err) {
+      console.warn('Could not parse', f.name, err);
+    }
+  }
+  fileInput.value = '';
+  updateQueueBar();
+}
+
+function sanitizeName(name) {
+  return name
+    .replace(/\.zip$/i, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase() + '.zip';
+}
+
+/* ── Queue bar ── */
+function updateQueueBar() {
+  const bar = document.getElementById('queueBar');
+  document.getElementById('queueCount').textContent = creatives.length;
+  bar.style.display = creatives.length ? 'flex' : 'none';
+}
+
+function clearAll() {
+  creatives.length = 0;
+  validated = false;
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('queueBar').style.display = 'none';
+  document.getElementById('summaryBar').style.display = 'none';
+  document.getElementById('actionRow').style.display = 'none';
+  document.getElementById('downloadAllBtn').style.display = 'none';
+  document.getElementById('fixAllBtn').disabled = true;
+  fileInput.value = '';
+}
+
+/* ── Validation engine ── */
+const TTD_RULES = [
+  {
+    id: 'has_index',
+    label: 'index.html present',
+    desc: 'ZIP must contain a root-level index.html',
+    severity: 'error',
+    check: (files) => {
+      const keys = Object.keys(files);
+      return keys.some(k => k === 'index.html' || k.match(/^[^\/]+\/index\.html$/));
+    },
+    fix: null
+  },
+  {
+    id: 'has_clicktag',
+    label: '<code>var clickTag</code> declared',
+    desc: 'A global clickTag variable must be declared in the HTML',
+    severity: 'error',
+    check: (files, html) => html && /var\s+clickTag\s*=/i.test(html),
+    fix: (html) => {
+      // Already correct casing?
+      if (/var\s+clickTag\s*=/.test(html)) return null;
+      // Wrong casing — normalize
+      return html.replace(/var\s+click[Tt]ag\s*=/gi, 'var clickTag =');
+    }
+  },
+  {
+    id: 'correct_case',
+    label: 'Variable name is exactly <code>clickTag</code>',
+    desc: 'Case-sensitive: must be clickTag, not clicktag or ClickTag',
+    severity: 'error',
+    check: (files, html) => {
+      if (!html) return false;
+      if (!/var\s+click[Tt]ag\s*=/i.test(html)) return true; // no clickTag at all — handled by has_clicktag
+      return /var\s+clickTag\s*=/.test(html);
+    },
+    fix: (html) => html.replace(/var\s+click[Tt]ag\s*=/gi, 'var clickTag =')
+  },
+  {
+    id: 'head_placement',
+    label: '<code>clickTag</code> in <code>&lt;head&gt;</code>',
+    desc: 'clickTag declaration should appear in <head> for TTD compatibility',
+    severity: 'warning',
+    check: (files, html) => {
+      if (!html) return false;
+      const headMatch = html.match(/<head[\s\S]*?<\/head>/i);
+      if (!headMatch) return false;
+      return /var\s+clickTag\s*=/i.test(headMatch[0]);
+    },
+    fix: (html) => {
+      // If clickTag exists in body or elsewhere, move to head
+      if (/var\s+clickTag\s*=/i.test(html)) {
+        // Remove existing inline script tags with just clickTag
+        let cleaned = html.replace(/<script[^>]*>\s*var\s+clickTag\s*=\s*["'][^"']*["']\s*;?\s*<\/script>/gi, '');
+        // Inject into <head>
+        cleaned = cleaned.replace(/(<head[^>]*>)/i, '$1\n  <script>var clickTag = "";<\/script>');
+        return cleaned;
+      }
+      return null;
+    }
+  },
+  {
+    id: 'window_open',
+    label: '<code>window.open(clickTag)</code> call present',
+    desc: 'Click handler must invoke window.open with clickTag as the URL',
+    severity: 'warning',
+    check: (files, html) => html && /window\.open\s*\(\s*clickTag/i.test(html),
+    fix: null // Cannot safely auto-inject click handlers — flag only
+  },
+  {
+    id: 'no_spaces_filename',
+    label: 'ZIP filename has no spaces',
+    desc: 'Filenames must be lowercase, no spaces, kebab-case',
+    severity: 'error',
+    check: (files, html, meta) => !/\s/.test(meta.originalName),
+    fix: null // Handled at repackage level
+  }
+];
+
+function getIndexHtml(zipFiles) {
+  const keys = Object.keys(zipFiles);
+  // Prefer root index.html
+  const root = keys.find(k => k === 'index.html');
+  if (root) return { key: root, file: zipFiles[root] };
+  // Fallback: first-level folder/index.html
+  const sub = keys.find(k => k.match(/^[^\/]+\/index\.html$/));
+  if (sub) return { key: sub, file: zipFiles[sub] };
+  return null;
+}
+
+async function validateCreative(creative) {
+  const { files, originalName } = creative;
+  let html = null;
+  const indexEntry = getIndexHtml(files);
+  if (indexEntry) {
+    html = await indexEntry.file.async('string');
+  }
+
+  const results = [];
+  for (const rule of TTD_RULES) {
+    const passed = rule.check(files, html, { originalName });
+    results.push({ rule, passed, html });
+  }
+
+  creative.checks = results;
+  creative.html = html;
+  creative.indexKey = indexEntry ? indexEntry.key : null;
+
+  const errors = results.filter(r => !r.passed && r.rule.severity === 'error').length;
+  const warnings = results.filter(r => !r.passed && r.rule.severity === 'warning').length;
+
+  if (errors === 0 && warnings === 0) {
+    creative.status = 'pass';
+  } else if (errors > 0) {
+    creative.status = 'fail';
+  } else {
+    creative.status = 'warn';
+  }
+
+  return creative;
+}
+
+async function validateAll() {
+  if (!creatives.length) return;
+  showProgress('Validating Creatives', 'Checking clickTag compliance...', creatives.length);
+
+  for (let i = 0; i < creatives.length; i++) {
+    await validateCreative(creatives[i]);
+    updateProgress(i + 1, creatives.length);
+  }
+
+  hideProgress();
+  validated = true;
+  renderResults();
+  document.getElementById('fixAllBtn').disabled = false;
+}
+
+/* ── Fix engine ── */
+async function fixCreative(creative) {
+  if (!creative.html || !creative.indexKey) return;
+
+  let html = creative.html;
+  let changed = false;
+
+  // Fix 1: Ensure var clickTag declared
+  if (!/var\s+click[Tt]ag\s*=/i.test(html)) {
+    html = html.replace(/(<head[^>]*>)/i, '$1\n  <script>var clickTag = "";<\/script>');
+    changed = true;
+  } else {
+    // Fix 2: Correct casing
+    const normalized = html.replace(/var\s+click[Tt]ag\s*=/gi, 'var clickTag =');
+    if (normalized !== html) { html = normalized; changed = true; }
+
+    // Fix 3: Move to <head> if not there
+    const headMatch = html.match(/<head[\s\S]*?<\/head>/i);
+    if (headMatch && !/var\s+clickTag\s*=/i.test(headMatch[0])) {
+      let c2 = html.replace(/<script[^>]*>\s*var\s+clickTag\s*=\s*["'][^"']*["']\s*;?\s*<\/script>/gi, '');
+      c2 = c2.replace(/(<head[^>]*>)/i, '$1\n  <script>var clickTag = "";<\/script>');
+      if (c2 !== html) { html = c2; changed = true; }
+    }
+  }
+
+  if (!changed && creative.name === creative.originalName.toLowerCase().replace(/\s/g,'-')) return;
+
+  // Repackage
+  const newZip = new JSZip();
+  const zipObj = creative.zip;
+
+  for (const [path, fileObj] of Object.entries(zipObj.files)) {
+    if (fileObj.dir) { newZip.folder(path); continue; }
+    if (path === creative.indexKey) {
+      newZip.file(path, html);
+    } else {
+      const content = await fileObj.async('arraybuffer');
+      newZip.file(path, content);
+    }
+  }
+
+  creative.fixedZip = await newZip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  creative.status = changed ? 'fixed' : creative.status;
+  creative.fixedName = creative.name; // already sanitized
+}
+
+async function fixAndRepackageAll() {
+  if (!validated) await validateAll();
+  const toFix = creatives.filter(c => c.status !== 'pass' || c.name !== c.originalName);
+  if (!toFix.length && creatives.every(c => c.name === c.originalName)) {
+    renderResults();
+    return;
+  }
+
+  showProgress('Fixing & Repackaging', 'Correcting clickTags and rebuilding ZIPs...', creatives.length);
+
+  for (let i = 0; i < creatives.length; i++) {
+    await fixCreative(creatives[i]);
+    // Re-validate after fix
+    if (creatives[i].fixedZip) {
+      const tempZip = await JSZip.loadAsync(creatives[i].fixedZip);
+      creatives[i].zip = tempZip;
+      creatives[i].files = tempZip.files;
+      await validateCreative(creatives[i]);
+      if (creatives[i].status !== 'fail') creatives[i].status = 'fixed';
+    }
+    updateProgress(i + 1, creatives.length);
+  }
+
+  hideProgress();
+  renderResults();
+  document.getElementById('downloadAllBtn').style.display = 'flex';
+}
+
+/* ── Download ── */
+async function downloadSingle(idx) {
+  const c = creatives[idx];
+  const zipBlob = c.fixedZip || await c.zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, c.name);
+}
+
+async function downloadAll() {
+  for (let i = 0; i < creatives.length; i++) {
+    const c = creatives[i];
+    const zipBlob = c.fixedZip || await c.zip.generateAsync({ type: 'blob' });
+    saveAs(zipBlob, c.name);
+    await new Promise(r => setTimeout(r, 150)); // stagger downloads
+  }
+}
+
+/* ── Render ── */
+function renderResults() {
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  document.getElementById('summaryBar').style.display = 'grid';
+  document.getElementById('actionRow').style.display = 'flex';
+
+  let pass = 0, warn = 0, fail = 0;
+  creatives.forEach(c => {
+    if (c.status === 'pass')  pass++;
+    else if (c.status === 'fixed' || c.status === 'warn') warn++;
+    else fail++;
+  });
+
+  document.getElementById('statTotal').textContent = creatives.length;
+  document.getElementById('statPass').textContent  = pass;
+  document.getElementById('statWarn').textContent  = warn;
+  document.getElementById('statFail').textContent  = fail;
+
+  creatives.forEach((c, idx) => {
+    container.appendChild(buildCard(c, idx));
+  });
+}
+
+const ICONS = {
+  pass:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+  fail:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  warn:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  fixed:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+  zip:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+  check_ok:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--status-pass').trim() || '#0f7b55'}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+  check_x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  check_w: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>`,
+};
+
+function statusBadge(status) {
+  const map = {
+    pass:   ['status-pass', ICONS.pass, 'Valid'],
+    fail:   ['status-fail', ICONS.fail, 'Issues Found'],
+    warn:   ['status-warn', ICONS.warn, 'Warning'],
+    fixed:  ['status-fixed', ICONS.fixed, 'Fixed'],
+    queued: ['status-processing', '', 'Queued'],
+  };
+  const [cls, icon, label] = map[status] || map.queued;
+  return `<span class="card-status-badge ${cls}">${icon} ${label}</span>`;
+}
+
+function buildCard(c, idx) {
+  const card = document.createElement('div');
+  card.className = 'creative-card';
+
+  const nameChanged = c.name !== c.originalName;
+
+  // Header
+  let headerHtml = `
+    <div class="card-header">
+      <div class="card-title-group">
+        <div class="file-icon">${ICONS.zip}</div>
+        <div>
+          <div class="card-filename">${esc(c.originalName)}</div>
+          ${nameChanged ? `<div class="card-filesize" style="color:var(--electric-blue);font-size:10px;">→ ${esc(c.name)}</div>` : `<div class="card-filesize">${Object.keys(c.files).filter(k=>!c.files[k].dir).length} files</div>`}
+        </div>
+      </div>
+      ${statusBadge(c.status)}
+    </div>`;
+
+  // Check list
+  let checksHtml = '<div class="check-list">';
+  if (c.checks) {
+    c.checks.forEach(({ rule, passed }) => {
+      const iconEl = passed
+        ? `<span class="check-icon" style="color:var(--status-pass)">${ICONS.check_ok.replace('stroke="'+getComputedStyle(document.documentElement).getPropertyValue('--status-pass').trim()+'"','stroke="#0f7b55"')}</span>`
+        : rule.severity === 'error'
+          ? `<span class="check-icon">${ICONS.check_x}</span>`
+          : `<span class="check-icon">${ICONS.check_w}</span>`;
+
+      const fixable = rule.fix !== null && !passed;
+      const actionTag = passed
+        ? `<span class="check-ok-tag">OK</span>`
+        : (fixable ? `<span class="check-fix-tag">Auto-Fixed</span>` : `<span class="check-fix-tag" style="background:#fee2e2;color:var(--status-fail)">Manual</span>`);
+
+      checksHtml += `
+        <div class="check-row">
+          ${iconEl}
+          <span class="check-label" data-tip="${esc(rule.desc)}">${rule.label}</span>
+          ${!passed ? actionTag : (c.status === 'fixed' && fixable ? actionTag : '<span></span>')}
+        </div>`;
+    });
+  }
+  checksHtml += '</div>';
+
+  // Code preview (show injected snippet if clickTag was missing)
+  let codeHtml = '';
+  const hadNoClickTag = c.checks && !c.checks.find(r => r.rule.id === 'has_clicktag').passed;
+  if (hadNoClickTag || (c.status === 'fixed')) {
+    codeHtml = `
+      <div class="code-preview">
+        <pre><span class="hl-comment">/* Injected into &lt;head&gt; */</span>
+<span class="hl-inject">&lt;script&gt;</span><span class="hl-key">var</span> <span class="hl-str">clickTag</span> = <span class="hl-str">""</span>;<span class="hl-inject">&lt;/script&gt;</span></pre>
+      </div>`;
+  }
+
+  // Footer
+  const hasIssues = c.status !== 'pass';
+  const footerHtml = `
+    <div class="card-footer">
+      <div class="card-footer-meta">
+        Output: <strong>${esc(c.name)}</strong>
+        ${nameChanged ? ' · <span style="color:var(--electric-blue);font-size:11px;">renamed</span>' : ''}
+      </div>
+      <div class="card-footer-actions">
+        ${hasIssues && !c.fixedZip ? `<button class="btn btn-ghost btn-sm" onclick="fixSingle(${idx})">Fix &amp; Repackage</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="downloadSingle(${idx})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+    </div>`;
+
+  card.innerHTML = headerHtml + checksHtml + codeHtml + footerHtml;
+  return card;
+}
+
+async function fixSingle(idx) {
+  showProgress('Fixing Creative', 'Applying corrections and repackaging...', 1);
+  await fixCreative(creatives[idx]);
+  if (creatives[idx].fixedZip) {
+    const tempZip = await JSZip.loadAsync(creatives[idx].fixedZip);
+    creatives[idx].zip = tempZip;
+    creatives[idx].files = tempZip.files;
+    await validateCreative(creatives[idx]);
+    if (creatives[idx].status !== 'fail') creatives[idx].status = 'fixed';
+  }
+  updateProgress(1, 1);
+  hideProgress();
+  renderResults();
+  document.getElementById('downloadAllBtn').style.display = 'flex';
+}
+
+/* ── Progress helpers ── */
+function showProgress(title, sub, total) {
+  document.getElementById('progressTitle').textContent = title;
+  document.getElementById('progressSub').textContent = sub;
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressLabel').textContent = `0 / ${total}`;
+  document.getElementById('progressOverlay').classList.add('active');
+}
+function updateProgress(done, total) {
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${total}`;
+}
+function hideProgress() {
+  setTimeout(() => document.getElementById('progressOverlay').classList.remove('active'), 400);
+}
+
+/* ── Utils ── */
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
